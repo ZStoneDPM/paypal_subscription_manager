@@ -9,6 +9,7 @@ const SubscriptionList = () => {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [filter, setFilter] = useState('ACTIVE');
   const pageSize = 10; // Set page size
 
   useEffect(() => {
@@ -34,8 +35,10 @@ const SubscriptionList = () => {
   useEffect(() => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
-    setDisplayPlans(plans.slice(startIndex, endIndex));
-  }, [currentPage, plans]);
+    const filteredPlans = plans.filter(plan => filter === 'ALL' || plan.status === filter);
+    setDisplayPlans(filteredPlans.slice(startIndex, endIndex));
+    setTotalPages(Math.ceil(filteredPlans.length / pageSize));
+  }, [currentPage, plans, filter]);
 
   const handleEdit = (plan) => {
     setSelectedPlan(plan);
@@ -65,9 +68,36 @@ const SubscriptionList = () => {
     }
   };
 
+  const handleFilterChange = (newFilter) => {
+    setFilter(newFilter);
+    setCurrentPage(1);
+  };
+
   return (
-    <div>
+    <div className="m-12">
       <h1>Manage Subscriptions</h1>
+      <div className="mb-4 flex justify-between items-center">
+        <div>
+          <button
+            onClick={() => handleFilterChange('ACTIVE')}
+            className={`mr-2 ${filter === 'ACTIVE' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} font-bold py-2 px-4 rounded`}
+          >
+            Active
+          </button>
+          <button
+            onClick={() => handleFilterChange('INACTIVE')}
+            className={`mr-2 ${filter === 'INACTIVE' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} font-bold py-2 px-4 rounded`}
+          >
+            Inactive
+          </button>
+          <button
+            onClick={() => handleFilterChange('ALL')}
+            className={`${filter === 'ALL' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} font-bold py-2 px-4 rounded`}
+          >
+            All
+          </button>
+        </div>
+      </div>
       <div className="card-container">
         {displayPlans.map((plan) => (
           <SubscriptionCard key={plan.id} plan={plan} onEdit={handleEdit} />

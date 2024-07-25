@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { updatePlan, deletePlan } from '../api';
+import { updatePlan, deactivatePlan, activatePlan } from '../api';
 
 const EditSubscriptionModal = ({ plan, onClose, onUpdate }) => {
   const [name, setName] = useState(plan.name);
@@ -9,22 +9,38 @@ const EditSubscriptionModal = ({ plan, onClose, onUpdate }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const updatedPlan = { name, description, status };
+      const updatedPlan = [
+        { "op": "replace", "path": "/name", "value": name },
+        { "op": "replace", "path": "/description", "value": description }
+      ];
+
+      console.log('Sending payload:', updatedPlan); // Log the payload being sent
+
       await updatePlan(plan.id, updatedPlan);
-      onUpdate(plan.id, updatedPlan);
+      onUpdate(plan.id, { ...plan, name, description });
       onClose();
     } catch (error) {
       console.error('Error updating plan:', error);
     }
   };
 
-  const handleDelete = async () => {
+  const handleDeactivate = async () => {
     try {
-      await deletePlan(plan.id);
-      onUpdate(plan.id, null);
+      await deactivatePlan(plan.id);
+      onUpdate(plan.id, { ...plan, status: 'INACTIVE' });
       onClose();
     } catch (error) {
-      console.error('Error deleting plan:', error);
+      console.error('Error deactivating plan:', error.response ? error.response.data : error.message);
+    }
+  };
+
+  const handleActivate = async () => {
+    try {
+      await activatePlan(plan.id);
+      onUpdate(plan.id, { ...plan, status: 'ACTIVE' });
+      onClose();
+    } catch (error) {
+      console.error('Error activating plan:', error.response ? error.response.data : error.message);
     }
   };
 
@@ -51,17 +67,6 @@ const EditSubscriptionModal = ({ plan, onClose, onUpdate }) => {
               rows="4"
             />
           </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">Status</label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            >
-              <option value="ACTIVE">ACTIVE</option>
-              <option value="INACTIVE">INACTIVE</option>
-            </select>
-          </div>
           <div className="flex justify-between">
             <button
               type="submit"
@@ -78,10 +83,17 @@ const EditSubscriptionModal = ({ plan, onClose, onUpdate }) => {
             </button>
             <button
               type="button"
-              onClick={handleDelete}
+              onClick={handleDeactivate}
               className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
             >
-              Delete
+              Deactivate
+            </button>
+            <button
+              type="button"
+              onClick={handleActivate}
+              className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            >
+              Activate
             </button>
           </div>
         </form>
