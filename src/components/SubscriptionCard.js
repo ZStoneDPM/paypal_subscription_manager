@@ -1,4 +1,3 @@
-// src/components/SubscriptionCard.js
 import React from 'react';
 
 const SubscriptionCard = ({ plan, onEdit }) => {

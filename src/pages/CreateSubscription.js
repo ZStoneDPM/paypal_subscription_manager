@@ -3,9 +3,9 @@ import SubscriptionForm from '../components/SubscriptionForm';
 
 function CreateSubscription() {
   return (
-    <div>
-      <h1>Create Subscription</h1>
-      <SubscriptionForm />
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">Create Subscription</h1>
+      <SubscriptionForm onUpdate={(data) => console.log('Create data:', data)} />
     </div>
   );
 }
