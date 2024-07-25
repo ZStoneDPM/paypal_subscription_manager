@@ -55,6 +55,7 @@ const EditSubscriptionModal = ({ plan, onClose, onUpdate }) => {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              disabled={status === 'INACTIVE'}
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             />
           </div>
@@ -63,37 +64,44 @@ const EditSubscriptionModal = ({ plan, onClose, onUpdate }) => {
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              disabled={status === 'INACTIVE'}
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               rows="4"
             />
           </div>
           <div className="flex justify-between">
-            <button
-              type="submit"
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            >
-              Save
-            </button>
+            {status === 'ACTIVE' && (
+              <>
+                <button
+                  type="submit"
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                >
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeactivate}
+                  className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                >
+                  Deactivate
+                </button>
+              </>
+            )}
+            {status === 'INACTIVE' && (
+              <button
+                type="button"
+                onClick={handleActivate}
+                className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              >
+                Activate
+              </button>
+            )}
             <button
               type="button"
               onClick={onClose}
               className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
             >
               Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleDeactivate}
-              className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            >
-              Deactivate
-            </button>
-            <button
-              type="button"
-              onClick={handleActivate}
-              className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            >
-              Activate
             </button>
           </div>
         </form>

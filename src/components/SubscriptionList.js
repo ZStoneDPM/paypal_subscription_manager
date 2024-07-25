@@ -73,6 +73,11 @@ const SubscriptionList = () => {
     setCurrentPage(1);
   };
 
+  const logActivePlans = () => {
+    const activePlans = plans.filter(plan => plan.status === 'ACTIVE');
+    console.log('Active plans:', JSON.stringify(activePlans, null, 2));
+  };
+
   return (
     <div className="m-12">
       <h1>Manage Subscriptions</h1>
@@ -96,6 +101,29 @@ const SubscriptionList = () => {
           >
             All
           </button>
+          <button
+            onClick={logActivePlans}
+            className="bg-green-500 text-white font-bold py-2 px-4 rounded ml-4"
+          >
+            Log Active Plans
+          </button>
+        </div>
+        <div className="flex justify-end items-center space-x-2">
+          <button
+            onClick={handlePreviousPage}
+            disabled={currentPage === 1}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span className="mx-2">Page {currentPage} of {totalPages}</span>
+          <button
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+          >
+            Next
+          </button>
         </div>
       </div>
       <div className="card-container">
@@ -111,23 +139,6 @@ const SubscriptionList = () => {
           onDelete={handleDelete}
         />
       )}
-      <div className="pagination flex justify-center items-center mt-4">
-        <button
-          onClick={handlePreviousPage}
-          disabled={currentPage === 1}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2 disabled:opacity-50"
-        >
-          Previous
-        </button>
-        <span className="mx-2">Page {currentPage} of {totalPages}</span>
-        <button
-          onClick={handleNextPage}
-          disabled={currentPage === totalPages}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ml-2 disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
     </div>
   );
 };
