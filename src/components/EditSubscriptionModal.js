@@ -1,33 +1,80 @@
-import React, { useState } from 'react';
-import { updatePlan, deactivatePlan, activatePlan } from '../api';
+import React, { useState, useEffect } from 'react';
+import { updatePlan, deactivatePlan, activatePlan, getPlanDetails } from '../api';
 
-const EditSubscriptionModal = ({ plan, onClose, onUpdate }) => {
-  const [name, setName] = useState(plan.name);
-  const [description, setDescription] = useState(plan.description);
-  const [status, setStatus] = useState(plan.status);
+const EditSubscriptionModal = ({ planId, onClose, onUpdate }) => {
+  const [plan, setPlan] = useState(null);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [status, setStatus] = useState('');
+  const [autoBillOutstanding, setAutoBillOutstanding] = useState(false);
+  const [paymentFailureThreshold, setPaymentFailureThreshold] = useState(0);
+  const [setupFee, setSetupFee] = useState(0);
+  const [setupFeeFailureAction, setSetupFeeFailureAction] = useState('');
+  const [taxPercentage, setTaxPercentage] = useState(0);
+  const [setupFeeEnabled, setSetupFeeEnabled] = useState(false);
+
+  useEffect(() => {
+    const fetchPlanDetails = async () => {
+      try {
+        const response = await getPlanDetails(planId);
+        const data = response.data;
+        console.log('Fetched plan details:', data);
+        setPlan(data);
+        setName(data.name || '');
+        setDescription(data.description || '');
+        setStatus(data.status || '');
+        setAutoBillOutstanding(data.payment_preferences?.auto_bill_outstanding || false);
+        setPaymentFailureThreshold(data.payment_preferences?.payment_failure_threshold || 0);
+        setSetupFee(data.payment_preferences?.setup_fee?.value || 0);
+        setSetupFeeEnabled(data.payment_preferences?.setup_fee?.value > 0 || false);
+        setTaxPercentage(data.taxes?.percentage || 0);
+      } catch (error) {
+        console.error('Error fetching plan details:', error);
+      }
+    };
+  
+    if (planId) {
+      fetchPlanDetails();
+    }
+  }, [planId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const updatedPlan = [
         { "op": "replace", "path": "/name", "value": name },
-        { "op": "replace", "path": "/description", "value": description }
+        { "op": "replace", "path": "/description", "value": description },
+        { "op": "replace", "path": "/payment_preferences/auto_bill_outstanding", "value": autoBillOutstanding },
+        { "op": "replace", "path": "/payment_preferences/payment_failure_threshold", "value": paymentFailureThreshold },
+        { "op": "replace", "path": "/payment_preferences/setup_fee", "value": { "value": setupFee, "currency_code": "USD" } },
+        { "op": "replace", "path": "/taxes/percentage", "value": taxPercentage }
       ];
-
-      console.log('Sending payload:', updatedPlan); // Log the payload being sent
-
-      await updatePlan(plan.id, updatedPlan);
-      onUpdate(plan.id, { ...plan, name, description });
+  
+      console.log('Sending payload:', updatedPlan);
+  
+      await updatePlan(planId, updatedPlan);
+      onUpdate(planId, {
+        ...plan,
+        name,
+        description,
+        payment_preferences: {
+          auto_bill_outstanding: autoBillOutstanding,
+          payment_failure_threshold: paymentFailureThreshold,
+          setup_fee: { value: setupFee, currency_code: 'USD' }
+        },
+        taxes: { percentage: taxPercentage }
+      });
       onClose();
     } catch (error) {
       console.error('Error updating plan:', error);
     }
   };
+  
 
   const handleDeactivate = async () => {
     try {
-      await deactivatePlan(plan.id);
-      onUpdate(plan.id, { ...plan, status: 'INACTIVE' });
+      await deactivatePlan(planId);
+      onUpdate(planId, { ...plan, status: 'INACTIVE' });
       onClose();
     } catch (error) {
       console.error('Error deactivating plan:', error.response ? error.response.data : error.message);
@@ -36,13 +83,17 @@ const EditSubscriptionModal = ({ plan, onClose, onUpdate }) => {
 
   const handleActivate = async () => {
     try {
-      await activatePlan(plan.id);
-      onUpdate(plan.id, { ...plan, status: 'ACTIVE' });
+      await activatePlan(planId);
+      onUpdate(planId, { ...plan, status: 'ACTIVE' });
       onClose();
     } catch (error) {
       console.error('Error activating plan:', error.response ? error.response.data : error.message);
     }
   };
+
+  if (!plan) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
@@ -56,7 +107,7 @@ const EditSubscriptionModal = ({ plan, onClose, onUpdate }) => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={status === 'INACTIVE'}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             />
           </div>
           <div className="mb-4">
@@ -65,8 +116,56 @@ const EditSubscriptionModal = ({ plan, onClose, onUpdate }) => {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               disabled={status === 'INACTIVE'}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               rows="4"
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2">Auto Bill Outstanding</label>
+            <input
+              type="checkbox"
+              checked={autoBillOutstanding}
+              onChange={(e) => setAutoBillOutstanding(e.target.checked)}
+              disabled={status === 'INACTIVE'}
+              className="shadow border rounded text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2">Setup Fee</label>
+            <input
+              type="checkbox"
+              checked={setupFeeEnabled}
+              onChange={(e) => setSetupFeeEnabled(e.target.checked)}
+              className="shadow border rounded text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            />
+            {setupFeeEnabled && (
+              <input
+                type="number"
+                value={setupFee}
+                onChange={(e) => setSetupFee(e.target.value)}
+                disabled={status === 'INACTIVE'}
+                className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mt-2"
+              />
+            )}
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2">Payment Failure Threshold</label>
+            <input
+              type="number"
+              value={paymentFailureThreshold}
+              onChange={(e) => setPaymentFailureThreshold(e.target.value)}
+              disabled={status === 'INACTIVE'}
+              className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2">Tax Percentage</label>
+            <input
+              type="number"
+              value={taxPercentage}
+              onChange={(e) => setTaxPercentage(e.target.value)}
+              disabled={status === 'INACTIVE'}
+              className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             />
           </div>
           <div className="flex justify-between">
@@ -108,6 +207,7 @@ const EditSubscriptionModal = ({ plan, onClose, onUpdate }) => {
       </div>
     </div>
   );
+  
 };
 
 export default EditSubscriptionModal;

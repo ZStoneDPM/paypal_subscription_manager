@@ -7,6 +7,7 @@ const API = axios.create({
 export const createSubscription = (data) => API.post('/subscriptions/create', data);
 export const getSubscriptions = () => API.get('/subscriptions');
 export const getPlans = (page = 1) => API.get(`/subscriptions/plans?page=${page}`);
+export const getPlanDetails = (id) => API.get(`/subscriptions/plans/${id}`);
 export const updatePlan = (id, data) => API.patch(`/subscriptions/plans/${id}`, data);
 export const deactivatePlan = (id) => API.post(`/subscriptions/plans/${id}/deactivate`);
 export const activatePlan = (id) => API.post(`/subscriptions/plans/${id}/activate`);

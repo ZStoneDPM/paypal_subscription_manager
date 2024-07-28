@@ -6,7 +6,7 @@ import EditSubscriptionModal from '../components/EditSubscriptionModal';
 const SubscriptionList = () => {
   const [plans, setPlans] = useState([]);
   const [displayPlans, setDisplayPlans] = useState([]);
-  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [selectedPlanId, setSelectedPlanId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [filter, setFilter] = useState('ACTIVE');
@@ -40,8 +40,8 @@ const SubscriptionList = () => {
     setTotalPages(Math.ceil(filteredPlans.length / pageSize));
   }, [currentPage, plans, filter]);
 
-  const handleEdit = (plan) => {
-    setSelectedPlan(plan);
+  const handleEdit = (planId) => {
+    setSelectedPlanId(planId);
   };
 
   const handleUpdate = (id, updatedPlan) => {
@@ -128,13 +128,13 @@ const SubscriptionList = () => {
       </div>
       <div className="card-container">
         {displayPlans.map((plan) => (
-          <SubscriptionCard key={plan.id} plan={plan} onEdit={handleEdit} />
+          <SubscriptionCard key={plan.id} plan={plan} onEdit={() => handleEdit(plan.id)} />
         ))}
       </div>
-      {selectedPlan && (
+      {selectedPlanId && (
         <EditSubscriptionModal
-          plan={selectedPlan}
-          onClose={() => setSelectedPlan(null)}
+          planId={selectedPlanId}
+          onClose={() => setSelectedPlanId(null)}
           onUpdate={handleUpdate}
           onDelete={handleDelete}
         />
